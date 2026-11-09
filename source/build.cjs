@@ -9,7 +9,7 @@ deck.lang = "ar-SA";
 const S = deck.ShapeType;
 const W = 13.333, H = 7.5;
 const C = { forest:"193B34", deep:"102A25", ivory:"FAF8F2", sand:"DBC09A", mint:"83E0C1", pale:"E5F4EC", line:"517369", ink:"172621", muted:"526660", white:"FFFFFF" };
-const fontFace = "Noto Sans Arabic";
+const fontFace = "Arial";
 function rect(slide,x,y,w,h,color,r=0) {
   slide.addShape(r ? S.roundRect : S.rect,{x,y,w,h,rectRadius:r,radius:r,line:{transparency:100},fill:{color}});
 }
@@ -56,7 +56,15 @@ for(const [i,[title,subtitle,items,seconds,notes]] of data.entries()){
     tx(slide,"تحليل المشكلة · بناء الحل · مراجعة النتيجة",7.25,4.3,5.15,.72,{fontSize:22,color:C.sand,bold:true});
     tx(slide,"ورشة Claude لدى نون",8.3,5.15,4.1,.45,{fontSize:17,color:soft});
   }else if(i===2){
-    slide.addChart(deck.ChartType.bar,[{name:"الإشغال",labels:["2025","2026"],values:[.7203,.6052]}],{
+    if(process.env.NOON_SIMPLE_CHART){
+      for(const [k,[year,value]] of [["2025",72.03],["2026",60.52]].entries()){
+        const x=1.2+k*3.7,h=value/100*2.55;
+        rect(slide,x,5.85-h,2.2,h,k===0?C.forest:"52766B");
+        tx(slide,value.toFixed(2)+"%",x,5.42-h,2.2,.34,{align:"center",rtlMode:false,bold:true});
+        tx(slide,year,x,5.96,2.2,.32,{align:"center",rtlMode:false,fontSize:15});
+      }
+      path(slide,[[.85,5.85],[8.5,5.85]],C.line,1);
+    }else slide.addChart(deck.ChartType.bar,[{name:"الإشغال",labels:["2025","2026"],values:[.7203,.6052]}],{
       x:1,y:2.75,w:7.65,h:3.55,barDir:"col",showLegend:false,showTitle:false,
       showValue:true,dataLabelFormatCode:"0.00%",dataLabelPosition:"outEnd",dataLabelFormat:"0.00%",dataLabelFormatColor:C.forest,dataLabelFontSize:17,
       valAxisMinVal:0,valAxisMaxVal:1,valAxisMajorUnit:.25,valAxisLabelFormatCode:"0%",chartColors:[C.forest],
@@ -76,9 +84,21 @@ for(const [i,[title,subtitle,items,seconds,notes]] of data.entries()){
       tx(slide,"Dragon Valley Hub",5.12,2.94,3.10,.43,{align:"center",rtlMode:false,fontSize:17,color:C.ivory,bold:true});
       for(const x of [2.63,6.66,10.69]) path(slide,[[6.67,3.44],[6.67,3.64],[x,3.64],[x,3.98]],C.line,1.6);
     }
-    const w=items.length===2?5.62:3.8,gap=.23,y=i===4?4:3.55;
-    items.forEach((item,k)=>card(slide,item,descriptions[i][k],12.42-w-k*(w+gap),y,w,dark));
-    if(i===1) tx(slide,"250 ألف ريال افتراضية · خطة ثلاثة أشهر",.7,5.45,11.72,.5,{fontSize:17,color:C.muted});
+    const showMap=i===1 && process.env.NOON_FLOOR_MAP;
+    const w=showMap?6.55:items.length===2?5.62:3.8,gap=.23,y=i===4?4:3.55;
+    if(showMap){
+      items.forEach((item,k)=>{
+        const row=2.92+k*.78;
+        rect(slide,5.87,row,w,.63,C.white);
+        tx(slide,item,9.43,row+.08,2.76,.44,{fontSize:17,bold:true,color:C.forest});
+        tx(slide,descriptions[i][k],6.02,row+.08,3.15,.44,{fontSize:13});
+      });
+    }else items.forEach((item,k)=>card(slide,item,descriptions[i][k],12.42-w-k*(w+gap),y,w,dark));
+    if(i===1 && process.env.NOON_FLOOR_MAP){
+      slide.addImage({path:process.env.NOON_FLOOR_MAP,x:.75,y:2.92,w:4.72,h:2.95,altText:"خريطة طوابق الفندق الخيالي من ملفات المشروع"});
+      tx(slide,"خريطة الفندق الخيالي · من ملفات التحدي",.75,5.99,4.72,.33,{fontSize:11});
+    }
+    if(i===1) tx(slide,"250 ألف ريال افتراضية · خطة ثلاثة أشهر",showMap?5.87:.7,5.45,showMap?6.55:11.72,.5,{fontSize:17,color:C.muted});
     if(i===3) tx(slide,"مثال تعليمي · قارن الفترتين واذكر طريقة الحساب",.7,5.5,11.72,.5,{fontSize:17,color:soft});
     if(i===5) tx(slide,"المشكلة المكتشفة · البوابة تكرر وظيفة اختبار الغرفة",.7,5.5,11.72,.5,{fontSize:17,color:soft});
   }
